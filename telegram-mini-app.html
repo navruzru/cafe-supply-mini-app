@@ -7,6 +7,8 @@
   <select id="cafeSelect" onchange="setCafe(this.value)" style="width:100%;padding:12px;margin:6px 0 18px;border:1px solid #e8edf5;border-radius:12px;background:white;font:inherit">
     <option>Узбекская кухня</option><option>Горячая выпечка</option><option>Донер Кебаб</option>
   </select>
+  <label for="deliveryDate" class="sub">Дата закупки и доставки</label>
+  <input id="deliveryDate" type="date" style="width:100%;padding:12px;margin:6px 0 18px;border:1px solid #e8edf5;border-radius:12px;font:inherit">
   <div class="top"><div><div class="eyebrow">Ежедневная заявка</div><div class="title" id="cafeTitle">Узбекская кухня</div><div class="sub">Укажите количество. Проверка и отправка водителю — в чате с ботом.</div></div><div class="badge">Сегодня</div></div>
   <div id="catalog"></div>
   <p id="status" class="sub" role="status" aria-live="polite"></p>
@@ -15,14 +17,23 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
 const tg=window.Telegram?.WebApp;tg?.ready();tg?.expand();
-const products=[['Мука','кг','Бакалея'],['Макароны','кг','Бакалея'],['Сахар','кг','Бакалея'],['Соль','кг','Бакалея'],['Масло растительное','л','Бакалея'],['Рис','кг','Бакалея'],['Гречка','кг','Бакалея'],['Мясо','кг','Мясо и овощи'],['Курица','кг','Мясо и овощи'],['Капуста','кг','Мясо и овощи'],['Лук','кг','Мясо и овощи'],['Морковь','кг','Мясо и овощи'],['Картофель','кг','Мясо и овощи'],['Помидоры','кг','Мясо и овощи'],['Огурцы','кг','Мясо и овощи'],['Зелень','пучок','Мясо и овощи'],['Лимон','кг','Мясо и овощи'],['Перец','кг','Мясо и овощи'],['Яйца','шт.','Молочное и соусы'],['Молоко','л','Молочное и соусы'],['Ряженка','л','Молочное и соусы'],['Творог','кг','Молочное и соусы'],['Сметана','уп.','Молочное и соусы'],['Майонез','уп.','Молочное и соусы'],['Кетчуп','уп.','Молочное и соусы'],['Горчица','уп.','Молочное и соусы'],['Хрен','уп.','Молочное и соусы'],['Вода','бут.','Напитки'],['Сок','л','Напитки'],['Pepsi','бут.','Напитки'],['Чипсы','уп.','Напитки'],['Влажные салфетки','уп.','Хозяйственное'],['Салфетки','уп.','Хозяйственное']];
+const products=[["Мука","кг","Бакалея",0.5],["Макароны","кг","Бакалея",0.5],["Сахар","кг","Бакалея",0.5],["Соль","кг","Бакалея",0.5],["Масло растительное","л","Бакалея",0.5],["Рис","кг","Бакалея",0.5],["Гречка","кг","Бакалея",0.5],["Яйца","шт.","Другие продукты",1],["Мясо","кг","Другие продукты",0.5],["Курица","кг","Другие продукты",0.5],["Капуста","кг","Другие продукты",0.5],["Лук","кг","Другие продукты",0.5],["Морковь","кг","Другие продукты",0.5],["Картофель","кг","Другие продукты",0.5],["Помидоры","кг","Другие продукты",0.5],["Огурцы","кг","Другие продукты",0.5],["Лимон","кг","Другие продукты",0.5],["Зелень","пучок","Другие продукты",1],["Перец","кг","Другие продукты",0.5],["Молоко","л","Другие продукты",0.5],["Ряженка","л","Другие продукты",0.5],["Творог","кг","Другие продукты",0.5],["Сметана","уп.","Другие продукты",1],["Майонез","уп.","Другие продукты",1],["Кетчуп","уп.","Другие продукты",1],["Горчица","уп.","Другие продукты",1],["Вода","бут.","Напитки",1],["Сок","л","Напитки",0.5],["Pepsi","бут.","Напитки",1],["Чипсы","уп.","Бакалея",1],["Хрен","уп.","Другие продукты",1],["Влажные салфетки","уп.","Посуда и упаковка",1],["Салфетки","уп.","Посуда и упаковка",1],["Стаканы","шт.","Посуда и упаковка",1],["Вилки","шт.","Посуда и упаковка",1],["Ложки","шт.","Посуда и упаковка",1],["Тарелки","шт.","Посуда и упаковка",1],["Контейнеры","шт.","Посуда и упаковка",1],["Пакеты","шт.","Посуда и упаковка",1]];
 const params=new URLSearchParams(location.search);
 const cafes=['Узбекская кухня','Горячая выпечка','Донер Кебаб'];
+const currentDay=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Moscow'}).format(new Date());
+function dayPlus(day,n){const d=new Date(day+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)}
+const hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Moscow',hour:'2-digit',hourCycle:'h23'}).format(new Date()));
+const dateInput=document.getElementById('deliveryDate');dateInput.min=currentDay;dateInput.max=dayPlus(currentDay,14);
+const initialDate=params.get('delivery_date');
+dateInput.value=initialDate&&initialDate>=currentDay&&initialDate<=dateInput.max?initialDate:dayPlus(currentDay,hour>=12?1:0);
+document.getElementById('cafeSelect').disabled=params.get('locked')==='1';
 let cafe=cafes.includes(params.get('cafe'))?params.get('cafe'):cafes[0];
 const values=Object.fromEntries(products.map(p=>[p[0],0]));
+const specifications={};
+const specifiedProducts=['Вода','Сок','Pepsi','Стаканы','Контейнеры','Тарелки','Пакеты'];
 let prefilled={};
 try{prefilled=JSON.parse(params.get('items')||'{}')}catch{}
-if(Array.isArray(prefilled))prefilled=Object.fromEntries(prefilled.map(p=>[p.product,p.amount]));
+if(Array.isArray(prefilled)){for(const p of prefilled){if(p&&typeof p.spec==='string')specifications[p.product]=p.spec.slice(0,60)}prefilled=Object.fromEntries(prefilled.filter(p=>p&&typeof p==='object').map(p=>[p.product,p.amount]))}
 for(const product of products){
   const saved=prefilled?.[product[0]];
   if(typeof saved!=='string')continue;
@@ -33,14 +44,16 @@ for(const product of products){
 }
 function setCafe(name){cafe=name;document.getElementById('cafeTitle').textContent=cafe;document.getElementById('cafeSelect').value=cafe}
 function updateSend(){document.getElementById('send').disabled=!Object.values(values).some(v=>v>0)}
-function render(){let groups={};products.forEach(p=>(groups[p[2]]??=[]).push(p));document.getElementById('catalog').innerHTML=Object.entries(groups).map(([g,ps])=>`<div class="group">${g}</div>`+ps.map(p=>`<div class="item"><div><div class="name">${p[0]}</div><div class="unit">Единица: ${p[1]}</div></div><div class="counter"><button aria-label="Уменьшить ${p[0]}" onclick="change('${p[0]}',-1)">−</button><span class="count" id="n-${p[0]}">${values[p[0]]}</span><button aria-label="Увеличить ${p[0]}" onclick="change('${p[0]}',1)">+</button></div></div>`).join('')).join('');updateSend()}
-function change(name,delta){values[name]=Math.min(100000,Math.max(0,Number((values[name]+delta).toFixed(6))));document.getElementById('n-'+name).textContent=values[name];updateSend()}
+function render(){let groups={};products.forEach(p=>(groups[p[2]]??=[]).push(p));document.getElementById('catalog').innerHTML=Object.entries(groups).map(([g,ps])=>`<div class="group">${g}</div>`+ps.map(p=>`<div class="item"><div style="min-width:0"><div class="name">${p[0]}</div><div class="unit">Единица: ${p[1]}</div>${specifiedProducts.includes(p[0])?`<input id="s-${p[0]}" aria-label="Вид или объём ${p[0]}" placeholder="Вид / объём, например 0,5 л" maxlength="60" style="width:100%;max-width:190px;margin-top:6px;padding:5px;border:1px solid #e8edf5;border-radius:6px" onchange="specifications['${p[0]}']=this.value.trim()">`:''}</div><div class="counter" style="gap:6px"><button aria-label="Уменьшить ${p[0]}" onclick="change('${p[0]}',-1)">−</button><input aria-label="Количество ${p[0]}" type="number" min="0" max="100000" step="${p[3]}" class="count" style="width:68px;border:1px solid #e8edf5;border-radius:6px;padding:6px;font:inherit" id="n-${p[0]}" value="${values[p[0]]}" onchange="setQuantity('${p[0]}',this.value)"><button aria-label="Увеличить ${p[0]}" onclick="change('${p[0]}',1)">+</button></div></div>`).join('')).join('');for(const name of specifiedProducts)document.getElementById('s-'+name).value=specifications[name]||'';updateSend()}
+function setQuantity(name,value){const n=Number(String(value).replace(',','.'));const product=products.find(p=>p[0]===name);if(!Number.isFinite(n)||n<0||n>100000||(product[3]===1&&!Number.isInteger(n))){document.getElementById('status').textContent='Укажите допустимое количество. Штучные товары — целым числом.';document.getElementById('n-'+name).value=values[name];return}values[name]=Number(n.toFixed(6));document.getElementById('n-'+name).value=values[name];document.getElementById('status').textContent='';updateSend()}
+function change(name,delta){const product=products.find(p=>p[0]===name);const value=Number((values[name]+delta*product[3]).toFixed(6));setQuantity(name,Math.min(100000,Math.max(0,value)))}
 function submitOrder(){
-  const items=products.filter(p=>values[p[0]]>0).map(p=>({product:p[0],amount:values[p[0]],unit:p[1]}));
+  const items=products.filter(p=>values[p[0]]>0).map(p=>({product:p[0],amount:values[p[0]],unit:p[1],...(specifications[p[0]]?{spec:specifications[p[0]]}:{})}));
   if(!items.length)return;
   const status=document.getElementById('status');
   if(!tg?.sendData||tg.platform==='unknown'){status.textContent='Чтобы вернуть заявку в чат, откройте этот список кнопкой внутри бота.';return}
-  const order={cafe,items};
+  if(!dateInput.value||dateInput.value<currentDay||dateInput.value>dateInput.max){status.textContent='Выберите дату закупки.';return}
+  const order={cafe,items,delivery_date:dateInput.value};
   if(params.has('draft_id')){order.draft_id=Number(params.get('draft_id'));order.revision=Number(params.get('revision'))}
   const payload=JSON.stringify(order);
   if(new TextEncoder().encode(payload).length>4096){status.textContent='Список слишком большой для одной заявки. Разделите его на две заявки.';return}
